@@ -10,16 +10,35 @@ class IncomeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $incomes = Income::all();
+        
+        // Ambil jenis pajak dari request (default ke 21%)
+        $pph = $request->input('pph', 21);
+        $tarifPajak = 0.21;
 
-        foreach ($incomes as $income) {
-            $income->estimated_tax = $income->jumlah * 0.22; // pajak 22%
+        // Tentukan tarif pajak berdasarkan jenis pph
+        if ($pph == 22) {
+            $tarifPajak = 0.22;
+        } elseif ($pph == 23) {
+            $tarifPajak = 0.23;
         }
 
-        return view('incomes.index', compact('incomes'));
+        // Hitung pajak sesuai tarif
+        $total_income = 0;
+        $total_tax = 0;
+        foreach ($incomes as $income) {
+            $income->estimated_tax = $income->jumlah * $tarifPajak;
+            $income->pph_type = $pph; // Menambahkan informasi jenis PPh
+            $total_income += $income->jumlah;
+            $total_tax += $income->estimated_tax;
+        }
+
+        return view('incomes.index', compact('incomes', 'pph', 'total_income', 'total_tax'));
     }
+
+
 
 
 

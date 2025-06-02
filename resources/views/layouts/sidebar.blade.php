@@ -3,10 +3,9 @@
 
     <!-- Sidebar - Brand -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ route('dashboard') }}">
-        <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-laugh-wink"></i>
+        <div class="sidebar-brand-icon">
+            <img src="{{ asset('img/logo.png') }}" alt="Logo" class="img-fluid" style="width: 280px; height: 80px;">
         </div>
-        <div class="sidebar-brand-text mx-3">Pencatatan Uang</div>
     </a>
 
     <!-- Divider -->
@@ -16,17 +15,25 @@
     <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('dashboard') }}">
             <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span></a>
+            <span>Dashboard</span>
+        </a>
     </li>
 
-    <!-- Nav Item - Income -->
+    <!-- Nav Item - Tembak Pajak -->
     <li class="nav-item {{ request()->routeIs('incomes.*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('incomes.index') }}">
             <i class="fas fa-fw fa-dollar-sign"></i>
-            <span>Income</span></a>
+            <span>Tembak Pajak</span>
+        </a>
     </li>
 
-    <!-- Add more sidebar items here -->
+    <!-- Nav Item - Revenue -->
+    <li class="nav-item {{ request()->routeIs('revenues.*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('revenues.index') }}">
+            <i class="fas fa-fw fa-coins"></i>
+            <span>Revenue</span>
+        </a>
+    </li>
 
 </ul>
 <!-- End of Sidebar -->

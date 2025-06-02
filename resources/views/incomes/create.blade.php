@@ -20,6 +20,27 @@
             <label for="jumlah" class="form-label">Jumlah (Rp)</label>
             <input type="number" class="form-control" id="jumlah" name="jumlah" required>
         </div>
+
+        {{-- Pilihan jenis PPh dengan radio button --}}
+        <div class="mb-3">
+            <label class="form-label">Pilih Jenis PPh:</label><br>
+
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="pph" id="pph21" value="21" checked>
+                <label class="form-check-label" for="pph21">PPh 21 (21%)</label>
+            </div>
+
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="pph" id="pph22" value="22">
+                <label class="form-check-label" for="pph22">PPh 22 (22%)</label>
+            </div>
+
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="pph" id="pph23" value="23">
+                <label class="form-check-label" for="pph23">PPh 23 (23%)</label>
+            </div>
+        </div>
+
         <button type="submit" class="btn btn-success">Simpan</button>
         <a href="{{ route('incomes.index') }}" class="btn btn-secondary">Kembali</a>
     </form>
