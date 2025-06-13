@@ -2,68 +2,58 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Income;
 use App\Models\Revenue;
 use Illuminate\Http\Request;
 
 class RevenueController extends Controller
 {
-    public function index(Request $request)
+
+
+   public function index(Request $request)
     {
-        $bulan = $request->input('bulan', date('Y-m'));
-
-        $incomes = Income::whereYear('tanggal', substr($bulan, 0, 4))
-                         ->whereMonth('tanggal', substr($bulan, 5, 2))
-                         ->get();
-
         $tarifPajak = 0.21;
+        $selectedYear = $request->input('year', now()->year);
 
-        $total_pendapatan = $incomes->sum('jumlah');
-        $total_pajak = $incomes->sum(fn($inc) => $inc->jumlah * $tarifPajak);
-        $penghasilan_bersih = $total_pendapatan - $total_pajak;
+        $months = collect();
+        $total_kotor = 0;
+        $total_pajak = 0;
+        $total_bersih = 0;
 
-        $revenue = Revenue::where('bulan', $bulan)->first();
+        for ($month = 1; $month <= 12; $month++) {
+            $date = Carbon::createFromDate($selectedYear, $month, 1);
+            $label = $date->format('F Y');
 
-        return view('revenues.index', compact('bulan', 'penghasilan_bersih', 'revenue'));
-    }
+            $incomes = Income::whereYear('tanggal', $selectedYear)
+                            ->whereMonth('tanggal', $month)
+                            ->get();
 
-    public function generateMonthlyRevenue(Request $request)
-    {
-        $bulan = $request->input('bulan');
+            $kotor = $incomes->sum('jumlah');
+            $pajak = $incomes->sum(fn($inc) => $inc->jumlah * match($inc->pph_type) {
+                22 => 0.22, 23 => 0.23, default => 0.21
+            });
+            $bersih = $kotor - $pajak;
 
-        if (!$bulan) {
-            return redirect()->back()->with('error', 'Pilih bulan terlebih dahulu.');
+            $months->push([
+                'label' => $label,
+                'pendapatan_kotor' => $kotor,
+                'pajak' => $pajak,
+                'pendapatan_bersih' => $bersih,
+            ]);
+
+            $total_kotor += $kotor;
+            $total_pajak += $pajak;
+            $total_bersih += $bersih;
         }
 
-        $incomes = Income::whereYear('tanggal', substr($bulan, 0, 4))
-                         ->whereMonth('tanggal', substr($bulan, 5, 2))
-                         ->get();
+        $availableYears = Income::selectRaw('YEAR(tanggal) as year')
+                                ->distinct()
+                                ->orderByDesc('year')
+                                ->pluck('year');
 
-        if ($incomes->isEmpty()) {
-            return redirect()->back()->with('error', "Tidak ada data income untuk bulan $bulan");
-        }
-
-        $tarifPajak = 0.21;
-        $total_pendapatan = $incomes->sum('jumlah');
-        $total_pajak = $incomes->sum(fn($inc) => $inc->jumlah * $tarifPajak);
-        $penghasilan_bersih = $total_pendapatan - $total_pajak;
-
-        Revenue::updateOrCreate(
-            ['bulan' => $bulan],
-            ['penghasilan_bersih' => $penghasilan_bersih]
-        );
-
-        return redirect()->back()->with('success', "Revenue bulan $bulan berhasil digenerate.");
+        return view('revenues.index', compact('months', 'selectedYear', 'availableYears', 'total_kotor', 'total_pajak', 'total_bersih'));
     }
 
-    public function annualReport()
-    {
-        $startMonth = now()->subMonths(11)->format('Y-m');
 
-        $revenues = Revenue::where('bulan', '>=', $startMonth)
-                           ->orderBy('bulan')
-                           ->get();
-
-        return view('revenues.annual_simple', compact('revenues'));
-    }
 }

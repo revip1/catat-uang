@@ -10,33 +10,28 @@ class IncomeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
         $incomes = Income::all();
-        
-        // Ambil jenis pajak dari request (default ke 21%)
-        $pph = $request->input('pph', 21);
-        $tarifPajak = 0.21;
 
-        // Tentukan tarif pajak berdasarkan jenis pph
-        if ($pph == 22) {
-            $tarifPajak = 0.22;
-        } elseif ($pph == 23) {
-            $tarifPajak = 0.23;
-        }
-
-        // Hitung pajak sesuai tarif
         $total_income = 0;
         $total_tax = 0;
+
         foreach ($incomes as $income) {
-            $income->estimated_tax = $income->jumlah * $tarifPajak;
-            $income->pph_type = $pph; // Menambahkan informasi jenis PPh
+            $tarif = match((int)$income->pph_type) {
+                22 => 0.22,
+                23 => 0.23,
+                default => 0.21
+            };
+
+            $income->estimated_tax = $income->jumlah * $tarif;
             $total_income += $income->jumlah;
             $total_tax += $income->estimated_tax;
         }
 
-        return view('incomes.index', compact('incomes', 'pph', 'total_income', 'total_tax'));
+        return view('incomes.index', compact('incomes', 'total_income', 'total_tax'));
     }
+
 
 
 
@@ -59,12 +54,14 @@ class IncomeController extends Controller
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric',
+            'pph' => 'required|in:21,22,23',
         ]);
 
         Income::create([
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->deskripsi,
             'jumlah' => $request->jumlah,
+            'pph_type' => $request->pph,
         ]);
 
         return redirect()->route('incomes.index')->with('success', 'Penghasilan berhasil ditambahkan.');
@@ -96,6 +93,7 @@ class IncomeController extends Controller
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric',
+            'pph' => 'required|in:21,22,23',
         ]);
 
         $income = Income::findOrFail($id);
@@ -103,10 +101,12 @@ class IncomeController extends Controller
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->deskripsi,
             'jumlah' => $request->jumlah,
+            'pph_type' => $request->pph,
         ]);
 
         return redirect()->route('incomes.index')->with('success', 'Penghasilan berhasil diperbarui.');
     }
+
 
     /**
      * Remove the specified resource from storage.
